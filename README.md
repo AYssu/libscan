@@ -2,6 +2,7 @@
 
 这是一个示例项目，展示如何使用 C++ 编写自己的内核读写动态库。通过这个项目，你可以实现内核扫描功能。
 
+注意: libmemory.so 放到 /data/local/tmp/libmemory.so 才行 注意!!! 下面的是其他平台测试的说明aarch64 就只能放那个目录 我写死了
 ## 项目结构
 
 ```
@@ -34,6 +35,11 @@ cd build
 cmake ..
 make
 ```
+3. ndk编译方式 只需要在目录下执行如下命令
+```
+ndk-build
+```
+4. 文件生成libs/arm64-v8a/libmemory.so
 
 编译完成后，你将在 `build` 目录下找到生成的动态库文件 `libmemory.so`。
 
@@ -54,10 +60,11 @@ make
 - **动态库路径**：确保动态库路径正确。如果动态库不在标准路径中，可以使用绝对路径或相对路径加载动态库。
 - **依赖库**：使用 `ldd` 命令检查动态库的依赖关系，确保所有依赖库都存在且路径正确。
 - **权限**：确保动态库文件有可执行权限。如果需要，可以使用 `chmod +x libmemory.so` 命令设置权限。
-- **运行时路径**：如果动态库在非标准路径下，可以设置 `LD_LIBRARY_PATH` 环境变量，让系统能够找到动态库：
+- **运行时路径**： `/data/local/tmp/libmemory.so` 
 
   ```sh
-  export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+  cp libmemory.so /data/local/tmp/libmemory.so 
+  chmod +x /data/local/tmp/libmemory.so
   ```
 
 ## 联系方式

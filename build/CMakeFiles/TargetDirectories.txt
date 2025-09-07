@@ -1,3 +1,0 @@
-/root/libfscan/build/CMakeFiles/memory.dir
-/root/libfscan/build/CMakeFiles/edit_cache.dir
-/root/libfscan/build/CMakeFiles/rebuild_cache.dir

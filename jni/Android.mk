@@ -16,6 +16,7 @@ APP_STL := c++_static
 
 # 设置包含目录
 LOCAL_C_INCLUDES := $(LOCAL_PATH)
+LOCAL_LDLIBS += $(LOCAL_PATH)/../driver.a
 
 # 构建共享库
 include $(BUILD_SHARED_LIBRARY)

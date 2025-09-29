@@ -15,7 +15,7 @@ class Driver
   public:
 	Driver()
 	{
-		initkey("9e4f332117102b20541c99ebc59b1ac35ac9e5e2737c74bbe7189ae7131c0b9eb58f0e29");
+		initkey("89a14a04b3afb68059965f2ef63cec6f730d2e860e68039339c4ed19e579d438cb6f0ce4");
 	}
 
 	// 版本ID(密钥)，防止版本接口不一致导致内核崩溃，切勿随意更换

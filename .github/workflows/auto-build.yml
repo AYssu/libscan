@@ -31,7 +31,7 @@ jobs:
     - name: Build with ndk-build
       run: |
         export ANDROID_NDK_HOME=$ANDROID_NDK_HOME
-        ndk-build -C .
+        ~/android-ndk/android-ndk-r28c/ndk-build -C .
 
     - name: Zip the Build
       run: |

@@ -25,7 +25,7 @@ jobs:
         mkdir -p ~/android-ndk
         wget https://dl.google.com/android/repository/android-ndk-r28c-linux.zip -O ~/android-ndk/android-ndk.zip
         unzip ~/android-ndk/android-ndk.zip -d ~/android-ndk
-        export ANDROID_NDK_HOME=~/android-ndk/android-ndk-r25c
+        export ANDROID_NDK_HOME=~/android-ndk/android-ndk-r28c
         echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 
     - name: Build with ndk-build

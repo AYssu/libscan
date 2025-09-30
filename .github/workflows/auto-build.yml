@@ -40,8 +40,8 @@ jobs:
       run: |
         mkdir -p ./build
         cp -r ./lib5.* ./libs/arm64-v8a/
-        cp -r ./kma_v.* ./libs/arm64-v8a/
-        zip -r ./build/libs_arm64-v8a.zip ./libs/arm64-v8a/
+        cp -r ./kma_v* ./libs/arm64-v8a/
+        zip -r ./build/libsharesos.zip ./libs/arm64-v8a/
 
 
     - name: Create Release and Upload Release Asset
@@ -50,8 +50,8 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         name: Release ${{ github.ref }}
-        body: TODO New Release.
+        body: 自动构建工作流,请将libsharesos.zip文件下载并解压,libmemory.so文件移动打/data/local/tmp/libmemory.so,lib5.so lib5.so.primary.so libkma.so移动到gg内部目录,并修改files文件夹权限为GG所有
         draft: false
         prerelease: false
         files: |
-          ./build/libs_arm64-v8a.zip
+          ./build/libsharesos.zip

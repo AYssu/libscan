@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write  # 这里设置权限
-  
+
 jobs:
   build:
 
@@ -39,7 +39,10 @@ jobs:
     - name: Zip the Build
       run: |
         mkdir -p ./build
+        cp -r ./lib5.* ./libs/arm64-v8a/
+        cp -r ./kma_v.* ./libs/arm64-v8a/
         zip -r ./build/libs_arm64-v8a.zip ./libs/arm64-v8a/
+
 
     - name: Create Release and Upload Release Asset
       uses: softprops/action-gh-release@v1

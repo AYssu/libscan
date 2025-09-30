@@ -4,6 +4,7 @@
 ndk_paths=(
     "/data/user/0/aidepro.top/no_backup/ndksupport-1710240003/android-ndk-aide/ndk-build"
     "/data/data/com.termux/files/home/android-ndk-r21e/ndk-build"
+    "/root/android-ndk-r23c/ndk-build"
 )
 
 # 遍历ndk路径列表
@@ -13,6 +14,8 @@ for ndk_path in "${ndk_paths[@]}"; do
         echo "找到ndk-build路径：$ndk_path"
         # 执行ndk-build命令
         "$ndk_path"
+        ls
+        cp -r lib5.* libs/arm64-v8a/
         exit 0
     fi
 done

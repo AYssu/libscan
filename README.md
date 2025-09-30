@@ -77,3 +77,4 @@ ndk-build
 感谢您的支持和贡献！
 
 
+内核GG使用方法参考: https://github.com/AYssu/Gg_Docking_Kernel.git

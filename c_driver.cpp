@@ -17,7 +17,8 @@ extern "C" {
     }
 
     bool fsinit_pid(pid_t pid) {
-        return driver->initpid(pid);
+        driver->initpid(pid);
+        return true;
     }
 
     bool fsread(uintptr_t addr, void *buffer, size_t size) {

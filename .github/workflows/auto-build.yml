@@ -1,57 +1,149 @@
-name: NDK-Build Release
+name: Build and Release
 
+# 工作流触发条件：当推送 tag 时触发（如 v1.0.0）
 on:
   push:
     tags:
-      - "v*"  # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v*"  # 匹配所有以 v 开头的 tag，例如 v1.0.0, v2.1.5
 
+# 权限设置：需要写入权限来创建 Release
 permissions:
-  contents: write  # 这里设置权限
+  contents: write
 
 jobs:
-  build:
-
+  # 使用 NDK 构建 ARM64 动态库
+  build-ndk:
+    name: Build with Android NDK
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source
-      uses: actions/checkout@v2
+    # 步骤1: 检出代码
+    - name: Checkout source code
+      uses: actions/checkout@v3
 
-    - name: Setup Android NDK
-      uses: actions/setup-java@v2
+    # 步骤2: 设置 Java 环境（NDK 依赖）
+    - name: Setup Java
+      uses: actions/setup-java@v3
       with:
         java-version: '11'
         distribution: 'adopt'
 
-    - name: Download and extract NDK
+    # 步骤3: 下载并配置 Android NDK
+    - name: Download and setup Android NDK
       run: |
+        echo "📦 下载 Android NDK r28c..."
         mkdir -p ~/android-ndk
-        wget https://dl.google.com/android/repository/android-ndk-r28c-linux.zip -O ~/android-ndk/android-ndk.zip
-        unzip ~/android-ndk/android-ndk.zip -d ~/android-ndk
+        wget -q https://dl.google.com/android/repository/android-ndk-r28c-linux.zip -O ~/android-ndk/android-ndk.zip
+        
+        echo "📂 解压 NDK..."
+        unzip -q ~/android-ndk/android-ndk.zip -d ~/android-ndk
+        
+        echo "✅ NDK 配置完成"
         export ANDROID_NDK_HOME=~/android-ndk/android-ndk-r28c
         echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 
+    # 步骤4: 使用 ndk-build 编译
     - name: Build with ndk-build
       run: |
+        echo "🔨 开始使用 NDK 编译..."
         export ANDROID_NDK_HOME=$ANDROID_NDK_HOME
-        ~/android-ndk/android-ndk-r28c/ndk-build -C .
+        $ANDROID_NDK_HOME/ndk-build -C . NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./jni/Android.mk
+        
+        echo "✅ NDK 编译完成"
+        ls -lh libs/arm64-v8a/
 
-    - name: Zip the Build
+    # 步骤5: 打包构建产物
+    - name: Package build artifacts
       run: |
-        mkdir -p ./build
-        cp -r ./lib5.* ./libs/arm64-v8a/
-        cp -r ./kma_v* ./libs/arm64-v8a/
-        zip -r ./build/libsharesos.zip ./libs/arm64-v8a/
+        echo "📦 打包构建产物..."
+        mkdir -p ./release
+        
+        # 复制所有必需的文件到 arm64-v8a 目录
+        cp -v lib5.so lib5.so.primary ./libs/arm64-v8a/ 2>/dev/null || true
+        cp -v kma_v*.kpm ./libs/arm64-v8a/ 2>/dev/null || true
+        
+        # 创建压缩包
+        cd libs/arm64-v8a/
+        zip -r ../../release/libscan-arm64-v8a.zip ./*
+        cd ../../
+        
+        echo "✅ 打包完成"
+        ls -lh ./release/
 
-
-    - name: Create Release and Upload Release Asset
+    # 步骤6: 创建 GitHub Release 并上传文件
+    - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        tag_name: ${{ github.ref }}
-        name: Release ${{ github.ref }}
-        body: 自动构建工作流,请将libsharesos.zip文件下载并解压,libmemory.so文件移动打/data/local/tmp/libmemory.so,lib5.so lib5.so.primary.so libkma.so移动到gg内部目录,并修改files文件夹权限为GG所有
+        tag_name: ${{ github.ref_name }}
+        name: libscan ${{ github.ref_name }}
+        body: |
+          # libscan - 内核读写动态库 ${{ github.ref_name }}
+          
+          ## 📦 构建信息
+          - **构建时间**: ${{ github.event.head_commit.timestamp }}
+          - **构建方式**: Android NDK r28c
+          - **目标架构**: ARM64-v8a (aarch64)
+          - **提交哈希**: ${{ github.sha }}
+          
+          ## 📥 下载说明
+          下载 `libscan-arm64-v8a.zip` 并解压，包含以下文件：
+          - `libmemory.so` - 基础内核读写库
+          - `libkma.so` - syscall 拦截库
+          - `lib5.so` / `lib5.so.primary` - 辅助库
+          - `kma_v*.kpm` - 内核模块（如果存在）
+          
+          ## 🚀 部署方法
+          
+          ### 方法1: 直接使用（推荐）
+          ```bash
+          # 1. 解压文件
+          unzip libscan-arm64-v8a.zip -d libscan
+          
+          # 2. 推送到 Android 设备
+          adb push libscan/libmemory.so /data/local/tmp/
+          adb push libscan/libkma.so /data/local/tmp/
+          adb push libscan/lib5.so /data/local/tmp/
+          adb push libscan/lib5.so.primary /data/local/tmp/
+          
+          # 3. 设置权限
+          adb shell chmod 755 /data/local/tmp/lib*.so
+          
+          # 4. 如果有内核模块，也需要推送
+          adb push libscan/kma_*.kpm /data/local/tmp/
+          ```
+          
+          ### 方法2: 配合 GameGuardian 使用
+          ```bash
+          # 1. 将 libmemory.so 放到系统临时目录
+          adb push libmemory.so /data/local/tmp/libmemory.so
+          
+          # 2. 将其他 .so 文件放到 GG 内部目录
+          # 路径示例: /data/data/catch_.me_.if_.you_.can_/files/
+          adb push lib5.so /data/data/catch_.me_.if_.you_.can_/files/
+          adb push lib5.so.primary /data/data/catch_.me_.if_.you_.can_/files/
+          adb push libkma.so /data/data/catch_.me_.if_.you_.can_/files/
+          
+          # 3. 修改 GG 目录权限
+          adb shell chown -R u0_a123:u0_a123 /data/data/catch_.me_.if_.you_.can_/files/
+          ```
+          
+          ## 📖 使用文档
+          详细使用方法请参考项目 README.md 或访问：
+          - GitHub: https://github.com/AYssu/libscan
+          - 对接示例: https://github.com/AYssu/Gg_Docking_Kernel
+          
+          ## ⚠️ 注意事项
+          1. 仅支持 ARM64 (aarch64) 架构的 Android 设备
+          2. 需要 root 权限才能正常使用
+          3. libmemory.so 必须放在 `/data/local/tmp/` 目录
+          4. 建议 Android 版本 >= 8.0 (API 26)
+          
+          ## 🐛 问题反馈
+          如遇到问题，请提交 Issue 或联系：
+          - Email: 2997036064@qq.com
+          - GitHub Issues: https://github.com/AYssu/libscan/issues
         draft: false
         prerelease: false
         files: |
-          ./build/libsharesos.zip
+          ./release/libscan-arm64-v8a.zip

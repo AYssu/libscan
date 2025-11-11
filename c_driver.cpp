@@ -3,10 +3,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include "driver.h"
+#include "driver_rt_hookpro.h"
 
 // 全局函数实现
-Driver *driver = new Driver();
+auto *driver = new rt_hookpro_driver();
 extern "C" {
     bool fsinit_kernel() {
         return true;
@@ -17,7 +17,7 @@ extern "C" {
     }
 
     bool fsinit_pid(pid_t pid) {
-        driver->initpid(pid);
+        driver->set_pid(pid);
         return true;
     }
 

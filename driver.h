@@ -2,7 +2,7 @@
 #define DRIVER_H
 #include <unistd.h>
 
-// 驱动接口类，支持内核版本4.9~6.6
+// 驱动接口类，支持内核版本4.9~6.12
 class Driver
 {
   public:
@@ -15,7 +15,7 @@ class Driver
     // 构造函数
 	Driver()	
 	{
-		initkey("d739d935eadef94fd21967c72e813dbe2472615536a25f74d5c9aa5b8347df8ad4fe8fb1");
+		initkey("9f901cbe824024832a02903f2d46dcd22a5531361a7856ac4be3cf7713879f8a2f39de19");
 	}
 	
     // 构析函数
@@ -30,7 +30,7 @@ class Driver
 	// CPU亲和设置，指定范围随机运行在哪个CPU上，默认CPU0-CPU4
 	void cpuset(int start, int end);
     
-    // 初始化pid，创建一个读写对象务必要初始一次，pid范围为 (0,32768) 开区间
+    // 初始化pid，创建一个读写对象务必要初始一次
 	void initpid(pid_t pid);
 	
 	// 获取进程pid，传入进程(包名)，从内核层安全获取pid
@@ -45,7 +45,7 @@ class Driver
 	// 获取模块地址，传入pid、模块名、模块(长度)大小，从内核层安全获取模块地址，支持多线程
 	uintptr_t get_module_base(pid_t pid, char *name, size_t size);
 	
-	// 硬件级读取数据，直接读硬件地址，传入地址、接收指针、类型大小，指数级安全，由于不使用CPU缓存，效率相应降低，支持多线程，支持QGKI、GKI2.0+
+	// 硬件级读取数据，直接读硬件地址，传入地址、接收指针、类型大小，指数级安全，由于不使用CPU缓存，效率相应降低，支持单进程多线程，支持QGKI、GKI2.0+
 	bool read_safe(uintptr_t addr, void *buffer, size_t size);
 	
     // 内核层读取数据，只读已映射到内核空间的地址，传入地址、接收指针、类型大小，读前记录CPU缓存状态，读完后恢复CPU缓存行状态，支持多线程，效率较高
@@ -106,7 +106,8 @@ class Driver
 	// 该方法将重置随机池，传入屏幕坐标x或者y，传入一个熵，熵越大越混乱，取值1 ~ 100，若每次传入的熵值不同，则重置随机池 ，返回一个随机x/y，一个循环中输入一个固定熵值即可，否则效率将无限降低
 	int uinput_rand(int val, int rand);
     
-	
+	// 500+版本新增用户锁 同一时间只能有一个用户在操作驱动(单进程多线程，最大支持nproc/2个线程) 进程结束后delete或者主动调用destroy释放资源，释放驱动,否则下次运行可能失败
+	void destroy();
 };
 
 

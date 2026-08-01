@@ -14,6 +14,7 @@ class MemoryReader {
 public:
     virtual ~MemoryReader() = default;
     virtual bool init(pid_t pid) = 0;
+    virtual pid_t pid() const = 0;
     virtual bool read(uintptr_t addr, void *buffer, size_t size) = 0;
     virtual bool write(uintptr_t addr, const void *buffer, size_t size) = 0;
     virtual bool is_page_resident(uintptr_t addr) = 0;

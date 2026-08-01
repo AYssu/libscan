@@ -7,6 +7,7 @@
 class DriverMemoryReader : public memtool::MemoryReader {
 public:
     bool init(pid_t pid) override { return driver_.set_pid(pid); }
+    pid_t pid() const override { return driver_.pid(); }
     bool read(uintptr_t addr, void *buffer, size_t size) override { return driver_.read(addr, buffer, size); }
     bool write(uintptr_t addr, const void *buffer, size_t size) override { return driver_.write(addr, const_cast<void *>(buffer), size); }
     bool is_page_resident(uintptr_t) override { return false; }

@@ -13,6 +13,9 @@ public:
     
     // 设置目标进程PID
     virtual bool set_pid(pid_t pid) = 0;
+
+    // 获取目标进程PID
+    virtual pid_t pid() const { return target_pid; }
     
     // 读取内存
     virtual bool read(uintptr_t address, void* buffer, size_t size) = 0;

@@ -1,8 +1,9 @@
 #include "c_driver.h"
 #include "memory_reader_impl.h"
 #include "driver_syscall.h"
+#include "driver_rt_hookpro.h"
 
-// ---- MemoryReader 包装：将 syscall_driver 适配为 MemoryReader 接口 ----
+// ---- MemoryReader 包装：将 rt_hookpro_driver 适配为 MemoryReader 接口 ----
 
 class DriverMemoryReader : public memtool::MemoryReader {
 public:
@@ -16,7 +17,8 @@ public:
     const char *name() const override { return "syscall-plugin"; }
 
 private:
-    syscall_driver driver_;
+    // syscall_driver driver_;
+    rt_hookpro_driver driver_;
 };
 
 // ---- 导出接口 ----

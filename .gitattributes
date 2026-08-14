@@ -1,0 +1,2 @@
+# 发布时，zip（内核驱动包）不打进源码 src.zip
+*.zip export-ignore

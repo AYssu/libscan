@@ -1,16 +1,33 @@
-name: Build libsyscall.so
+name: Build driver
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+# ============================================================
+# 可配置项：下次适配其他项目，只改下面两行即可
+#   DRIVER_NAME -> 编译产物 lib${DRIVER_NAME}.so（模块名，不含 lib 前缀、不含 .so 后缀）
+#   DRIVER_ZIP  -> 随 Release 一起发布的内核驱动(RThook)压缩包文件名
+# ============================================================
+env:
+  DRIVER_NAME: rthookpro
+  DRIVER_ZIP: "RThook有缓+内核硬件断点适合和平.zip"
+  # Release 页面顶部简介文本（下次适配改这里）
+  RELEASE_NOTES: |
+    libscan 内存读写插件（RThook 内核驱动版）
+
+    - 导出 `create_memory_reader()` 接口，供 fscan `--reader` 加载
+    - 底层 RThook 驱动：socket 通信 + 缓存 + 内核过搜索检测 
+    - arm64-v8a / API 21+
+
 jobs:
   build:
-    name: Build with Android NDK
+    name: Build driver
     runs-on: ubuntu-latest
 
     steps:
@@ -33,17 +50,33 @@ jobs:
       run: |
         $ANDROID_NDK_HOME/ndk-build -C . \
           NDK_PROJECT_PATH=. \
-          APP_BUILD_SCRIPT=./jni/Android.mk
+          APP_BUILD_SCRIPT=./jni/Android.mk \
+          DRIVER_NAME="$DRIVER_NAME" > /tmp/build.log 2>&1 \
+          || { echo "::error::编译失败，最后 50 行日志："; tail -n 50 /tmp/build.log; exit 1; }
         ls -lh libs/arm64-v8a/
 
     - name: Package
       run: |
         mkdir -p release
+        # 1) 源码包（仅跟踪的源码，不含 .git / 构建产物 / 驱动 zip）
+        git archive --format=zip -o release/src.zip HEAD
+        # 2) 编译产物 libxxx.so
         cd libs/arm64-v8a
-        zip ../../release/libsyscall-arm64-v8a.zip libsyscall.so
+        zip -q "../../release/lib${DRIVER_NAME}-arm64-v8a.zip" "lib${DRIVER_NAME}.so"
+        cd ../..
+        # 3) 内核驱动(RThook)原包
+        cp "$DRIVER_ZIP" release/
+        ls -lh release/
+
+    - name: Upload artifacts (manual dispatch test)
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-files
+        path: release/*
 
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: ./release/libsyscall-arm64-v8a.zip
+        files: release/*
+        body: ${{ env.RELEASE_NOTES }}
